@@ -21,10 +21,14 @@ class Phone(Field):
 class Birthday(Field):
     def __init__(self, value):
         try:
-            self.date = datetime.strptime(value, "%d.%m.%Y").date()
+            datetime.strptime(value, "%d.%m.%Y")
         except ValueError:
             raise ValueError("Invalid date format. Use DD.MM.YYYY")
         super().__init__(value)
+        
+    @property
+    def date(self):
+        return datetime.strptime(self.value, "%d.%m.%Y").date()
 
 class Record:
     def __init__(self, name):
@@ -119,6 +123,8 @@ def input_error(func):
             return "Contact not found."
         except IndexError:
             return "Write your name"
+        except AttributeError:
+            return "Contact not found."
 
     return inner
 
@@ -149,8 +155,6 @@ def change_contact(args, book: AddressBook):
         raise ValueError("Give me name, old phone and new phone please.")
     name, old_phone, new_phone, *_ = args
     record = book.find(name)
-    if record is None:
-        raise KeyError(name)
     record.edit_phone(old_phone, new_phone)
     return "Contact updated."
 
@@ -158,8 +162,6 @@ def change_contact(args, book: AddressBook):
 def show_phone(args, book: AddressBook):
     name = args[0]
     record = book.find(name)
-    if record is None:
-        raise KeyError(name)
     if not record.phones:
         return "No phones saved for this contact."
     return "; ".join(p.value for p in record.phones)
@@ -176,8 +178,6 @@ def add_birthday(args, book: AddressBook):
         raise ValueError("Give me name and birthday (DD.MM.YYYY) please.")
     name, birthday, *_ = args
     record = book.find(name)
-    if record is None:
-        raise KeyError(name)
     record.add_birthday(birthday)
     return "Birthday added."
 
@@ -185,8 +185,6 @@ def add_birthday(args, book: AddressBook):
 def show_birthday(args, book: AddressBook):  
     name = args[0]
     record = book.find(name)
-    if record is None:
-        raise KeyError(name)
     if record.birthday is None:
         return "Birthday is not set for this contact."
     return record.birthday.value
